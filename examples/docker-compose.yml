@@ -1,0 +1,21 @@
+# Production Docker Compose Example
+#
+# This is a generalized example.
+# Replace REGISTRY_IMAGE and other placeholders
+# with values appropriate for your own project.
+#
+# Never commit a real production .env file.
+
+services:
+  backend:
+    image: REGISTRY_IMAGE:${IMAGE_TAG:?IMAGE_TAG is required}
+
+    container_name: application-backend
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      - "3000:3000"

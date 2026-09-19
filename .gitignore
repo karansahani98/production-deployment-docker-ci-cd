@@ -1,0 +1,97 @@
+# GitLab CI/CD Example
+#
+# Generalized example based on the deployment process.
+#
+# This pipeline:
+# 1. Builds a Docker image.
+# 2. Tags it with the Git commit SHA.
+# 3. Pushes it to the GitLab Container Registry.
+# 4. Provides a manual production deployment.
+#
+# Real credentials must be stored in GitLab CI/CD variables.
+# Never hard-code secrets in this file.
+
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: $CI_COMMIT_SHA
+
+# ---------------------------------------------------------
+# Build
+# ---------------------------------------------------------
+
+build:
+  stage: build
+
+  image: docker:29
+
+  services:
+    - name: docker:29-dind
+      alias: docker
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+
+  script:
+    # Authenticate with GitLab Container Registry
+    # using GitLab's built-in CI/CD variables.
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+
+    # Build the immutable application image.
+    - docker build -t "$IMAGE_NAME:$IMAGE_TAG" .
+
+    # Push the image to the registry.
+    - docker push "$IMAGE_NAME:$IMAGE_TAG"
+
+
+# ---------------------------------------------------------
+# Production Deployment
+# ---------------------------------------------------------
+
+deploy_production:
+  stage: deploy
+
+  image: alpine:3.20
+
+  before_script:
+    # Install SSH client.
+    - apk add --no-cache openssh-client
+
+    # Prepare SSH directory.
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    # Write the private deployment key.
+    #
+    # SSH_PRIVATE_KEY must be stored securely
+    # as a GitLab CI/CD variable.
+    - printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+
+    # Add the EC2 host key.
+    - ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+  script:
+    # Connect to the production server and deploy
+    # the exact commit-SHA image.
+    - |
+      ssh "$EC2_USER@$EC2_HOST" "
+        cd /path/to/application &&
+        IMAGE_TAG=$CI_COMMIT_SHA docker compose pull &&
+        IMAGE_TAG=$CI_COMMIT_SHA docker compose up -d &&
+        IMAGE_TAG=$CI_COMMIT_SHA docker compose ps
+      "
+
+  environment:
+    name: production
+
+  # Production deployment is intentionally manual.
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+
+    - when: never
