@@ -1,84 +1,23 @@
-# Production Deployment with Docker, GitLab CI/CD and AWS
+# Production Deployment with Docker, GitLab CI/CD & AWS
 
-A practical, production-oriented deployment workflow covering:
+> A real production deployment, documented end-to-end — not a "hello world" tutorial.
 
-- Local development
-- Git
-- Docker
-- Container Registry
-- GitLab CI/CD
-- AWS EC2
-- Docker Compose
-- Nginx
-- Domain configuration
-- HTTPS
-- Production deployment
-- Rollback
-- Security
-- Monitoring
+Most Docker/CI-CD guides stop at "it builds and runs locally." This repo picks up where those leave off: **shipping to a real AWS EC2 box, behind Nginx, over HTTPS, with rollback and monitoring in place** — the parts that actually matter in production.
 
-This repository documents a real-world engineering deployment journey in a generalized and sanitized form.
+It walks through 12 phases, from local dev to live deployment, documented as it happened: the decisions made, the commands run, the mistakes hit, and how they got fixed.
 
-> The actual application repository remains private.  
-> This repository contains architecture, processes, examples, commands, decisions, troubleshooting notes, and lessons learned.
+**What's inside:**
+- 🐳 Dockerized app, built and pushed via GitLab CI/CD
+- ☁️ Deployed to AWS EC2 with Docker Compose
+- 🔒 Nginx reverse proxy with domain + HTTPS (Let's Encrypt)
+- ↩️ Rollback strategy for failed deploys
+- 🛡️ Security hardening checklist
+- 📊 Basic production monitoring
 
----
+> The live application code is private — this repo is the sanitized playbook of *how it got deployed*, so others can follow the same path.
 
-# Architecture
-
-The baseline production architecture is:
-
-```text
-                         Internet
-                            |
-                            v
-                     Domain / DNS
-                            |
-                            v
-                       HTTPS / WSS
-                            |
-                            v
-                         Nginx
-                            |
-                            v
-                    Docker / Node.js
-                       /         \
-                      /           \
-                     v             v
-             MongoDB Atlas    External APIs
+📄 [Full architecture](architecture/production-architecture.md) · [Deployment flow](architecture/deployment-flow.md) · [Example configs](examples/)
 
 
-
-
-
-##############################################################
-
-production-deployment-docker-cicd/
-│
-├── README.md
-├── .gitignore
-│
-├── application/
-│   ├── 00-project-roadmap.md
-│   ├── phase-01-local-development.md
-│   ├── phase-02-git.md
-│   ├── phase-03-docker.md
-│   ├── phase-04-container-registry.md
-│   ├── phase-05-gitlab-cicd.md
-│   ├── phase-06-aws-ec2.md
-│   ├── phase-07-nginx.md
-│   ├── phase-08-domain-https.md
-│   ├── phase-09-production-deployment.md
-│   ├── phase-10-rollback.md
-│   ├── phase-11-security.md
-│   ├── phase-12-monitoring.md
-│   └── 99-pending-work.md
-│
-├── architecture/
-│   ├── deployment-flow.md
-│   └── production-architecture.md
-│
-└── examples/
-    ├── Dockerfile
-    ├── docker-compose.yml
-    └── .gitlab-ci.yml
+2. Architecture diagram
+![alt text](image.png)
